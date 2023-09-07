@@ -4,7 +4,7 @@ data aws_lambda_function "sportbuzz-users-statistics-python-lambda"{
 
 resource "aws_api_gateway_rest_api" "sportbuzz-api-gateway" {
   name          = "sportbuzz-api-gateway"
-  protocol_type = "HTTP"
+  description   = "SportBUZZ API Gateway"
 }
 
 resource "aws_api_gateway_resource" "sportbuzz" {
