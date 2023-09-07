@@ -50,9 +50,9 @@ resource "aws_api_gateway_integration" "users-statistics" {
   rest_api_id             = aws_api_gateway_rest_api.sportbuzz-api-gateway.id
   resource_id             = aws_api_gateway_resource.statistics.id
   http_method             = aws_api_gateway_method.users-statistics.http_method
-  type                    = "AWS"
   uri                     = data.aws_lambda_function.sportbuzz-users-statistics-python-lambda.invoke_arn
-  integration_http_method = "GET"
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
 }
 
 
@@ -62,4 +62,20 @@ resource "aws_lambda_permission" "sportbuzz-users-statistics-api-gateway-lambda-
   function_name = data.aws_lambda_function.sportbuzz-users-statistics-python-lambda.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn = "${aws_api_gateway_rest_api.sportbuzz-api-gateway.execution_arn}/*/*"
+}
+
+resource "aws_api_gateway_deployment" "sportbuzz-api-gateway" {
+  rest_api_id = aws_api_gateway_rest_api.sportbuzz-api-gateway.id
+  triggers = {
+    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.sportbuzz-api-gateway.body))
+  }
+  lifecycle {
+    create_before_destroy = true
+  }
+  depends_on = [aws_api_gateway_method.users-statistics, aws_api_gateway_integration.users-statistics]
+}
+resource "aws_api_gateway_stage" "sportbuzz-api-gateway" {
+  deployment_id = aws_api_gateway_deployment.sportbuzz-api-gateway.id
+  rest_api_id   = aws_api_gateway_rest_api.sportbuzz-api-gateway.id
+  stage_name    = "dev"
 }
